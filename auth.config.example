@@ -1,0 +1,12 @@
+# Edit and rename this to auth.config.
+
+# JWT secret that will sign your JWTs. Has to correspond to the client
+# key
+Key = SOMESECRETKEY
+
+# A simple auth scheme
+Auth = simpleAuth
+Username = foo
+Password = bar
+
+# Database details, username/password will be db-user and db-password
