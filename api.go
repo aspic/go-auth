@@ -48,6 +48,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
         tokenString, err := token.SignedString([]byte(config.Key))
         if err == nil {
+            log.Print("Authenticated '%s' in realm '%s' from IP '%s'", username, realm, r.RemoteAddr)
             fmt.Fprint(w, tokenString)
         } else {
             log.Print("Error creating token string, ", err)
