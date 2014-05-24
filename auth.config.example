@@ -3,6 +3,7 @@
 # JWT secret that will sign your JWTs. Has to correspond to the client
 # key
 Key = SOMESECRETKEY
+Expire = 72 # Valid time for token, in hours
 
 # A simple auth scheme
 Auth = simpleAuth

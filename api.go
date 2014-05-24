@@ -1,13 +1,14 @@
 package main
 
 import (
-    "log"
-    "fmt"
-    "net/http"
     "flag"
+    "fmt"
+    "github.com/aspic/go-auth/client"
     "github.com/dgrijalva/jwt-go"
     "github.com/itkinside/itkconfig"
-    "github.com/aspic/go-auth/client"
+    "log"
+    "net/http"
+    "time"
 )
 
 var auth Auth
@@ -20,6 +21,7 @@ type Config struct {
     Password string // Password (for auth or db)
     Host string     // database host
     Database string // database
+    Expire int      // Hours until token expire
 }
 
 type Auth func(username string, password string, realm string) bool
@@ -35,12 +37,14 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
     username := r.FormValue("username")
     password := r.FormValue("password")
     realm := r.FormValue("realm")
+    w.Header().Set("Access-Control-Allow-Origin", "*")
 
     // Do authentication
     if auth(username, password, realm) {
         token := jwt.New(jwt.GetSigningMethod("HS256"))
         token.Claims["user"] = username
         token.Claims["iss"] = realm
+        token.Claims["exp"] = time.Now().Add(time.Hour * time.Duration(config.Expire)).Unix()
 
         tokenString, err := token.SignedString([]byte(config.Key))
         if err == nil {
@@ -68,7 +72,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
     // Load config
-    config = &Config{}
+    config = &Config{Expire: 72}
     configFile := "auth.config"
     err := itkconfig.LoadConfig(configFile, config)
     if err != nil {
