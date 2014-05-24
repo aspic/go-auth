@@ -10,15 +10,15 @@ import (
     "github.com/aspic/go-auth/client"
 )
 
-var auther Auth
+var auth Auth
 var config *Config
 
 type Config struct {
-    Key string // JWT Secret
-    Auth string // Authentication method
+    Key string      // JWT Secret
+    Auth string     // Authentication method
     Username string // Username (for auth or db)
     Password string // Password (for auth or db)
-    Host string // database host
+    Host string     // database host
     Database string // database
 }
 
@@ -37,7 +37,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
     realm := r.FormValue("realm")
 
     // Do authentication
-    if auther(username, password, realm) {
+    if auth(username, password, realm) {
         token := jwt.New(jwt.GetSigningMethod("HS256"))
         token.Claims["user"] = username
         token.Claims["iss"] = realm
@@ -67,9 +67,8 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
-    config = &Config{}
-
     // Load config
+    config = &Config{}
     configFile := "auth.config"
     err := itkconfig.LoadConfig(configFile, config)
     if err != nil {
@@ -77,13 +76,11 @@ func main() {
     }
 
     if config.Auth == "simpleAuth" {
-        auther = simpleAuth
+        auth = simpleAuth
     }
 
-
-    http.HandleFunc("/secret", testHandler)
     http.HandleFunc("/auth", authHandler)
-    http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
+    http.HandleFunc("/secret", testHandler)
 
     var local = flag.String("local", "", "serve as webserver, example: 0.0.0.0:8000")
     flag.Parse()

@@ -16,7 +16,7 @@ func AuthWithCookie(r *http.Request, key string) *Token {
     if err == nil && cookie != nil {
         return AuthWithKey(cookie.Value, key)
     }
-    log.Print("Unable to read cookie")
+    log.Print("Unable to read cookie, ", err)
     return nil
 }
 
