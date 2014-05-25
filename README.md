@@ -26,3 +26,12 @@ The service is started by executing the binary with hostname and port
 specified as an argument.
 
     $ ./go-auth -local="localhost:8080"
+
+## Usage
+
+A token is retrieved by authenticating with the /auth endpoint:
+
+    $ curl http://localhost:8080/auth?username=foo&password=bar
+
+The client has to store this token, and present it when requesting
+services that are protected by the go-auth scheme.
