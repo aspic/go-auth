@@ -3,6 +3,7 @@ package main
 import (
     "flag"
     "fmt"
+    "github.com/aspic/go-auth/backend"
     "github.com/aspic/go-auth/client"
     "github.com/dgrijalva/jwt-go"
     "github.com/itkinside/itkconfig"
@@ -11,25 +12,8 @@ import (
     "time"
 )
 
-var auth Auth
-var config *Config
-
-type Config struct {
-    Key string      // JWT Secret
-    Auth string     // Authentication method
-    Username string // Username (for auth or db)
-    Password string // Password (for auth or db)
-    Host string     // database host
-    Database string // database
-    Expire int      // Hours until token expire
-}
-
-type Auth func(username string, password string, realm string) bool
-
-// Reads username and password from the configuration file
-func simpleAuth(username string, password string, realm string) bool {
-    return username == config.Username && password == config.Password
-}
+var auth backend.Auth
+var config *backend.Config
 
 // Expects username and password, returns token
 func authHandler(w http.ResponseWriter, r *http.Request) {
@@ -73,16 +57,14 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 func main() {
 
     // Load config
-    config = &Config{Expire: 72}
+    config = &backend.Config{Expire: 72}
     configFile := "auth.config"
     err := itkconfig.LoadConfig(configFile, config)
     if err != nil {
         log.Print("Could not read config file ", configFile, err)
     }
 
-    if config.Auth == "simpleAuth" {
-        auth = simpleAuth
-    }
+    auth = backend.New(config)
 
     http.HandleFunc("/auth", authHandler)
     http.HandleFunc("/secret", testHandler)
