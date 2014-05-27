@@ -6,6 +6,8 @@ package backend
 import (
     "log"
     "database/sql"
+    _ "github.com/lib/pq"
+    "crypto/sha256"
     "fmt"
 )
 
@@ -31,8 +33,33 @@ func simpleAuth(username string, password string, realm string) bool {
 
 // Auths with postgresql database as back end
 func pgAuth(username string, password string, realm string) bool {
+    var hash string
+    var salt string
+
+    stmt, err := db.Prepare(
+        `SELECT u.pw_hash, u.salt FROM identity AS u, realm, inrealm
+        WHERE inrealm.id = u.id AND inrealm.realm = realm.id
+        AND realm.name = $1 AND u.username = $2`)
+    if err != nil {
+        log.Print("Failed to do query: ", err)
+        return false
+    }
+    stmt.QueryRow(realm, username).Scan(&hash, &salt)
+    if hash != "" && salt != "" {
+        return verifyPassword(password, salt, hash)
+    }
+    log.Print("Got salt:", salt)
 
     return false
+}
+
+func verifyPassword(pw string, salt string, pwHash string) bool {
+    pwBytes := []byte(salt + pw)
+    hasher := sha256.New()
+    hasher.Write(pwBytes)
+    sum := fmt.Sprintf("%x", hasher.Sum(nil))
+    log.Print(sum)
+    return sum == pwHash
 }
 
 func New (conf *Config) Auth {
