@@ -1,7 +1,7 @@
 CREATE TABLE Identity (
         id SERIAL PRIMARY KEY NOT NULL,
-        username VARCHAR,
-        password VARCHAR,
+        username VARCHAR UNIQUE,
+        pw_hash VARCHAR,
         email VARCHAR,
         salt VARCHAR,
         created TIMESTAMP DEFAULT now(),
@@ -14,7 +14,7 @@ CREATE TABLE Realm (
         key VARCHAR NOT NULL
 );
 CREATE TABLE InRealm (
-        identity REFERENCES Identity(id) NOT NULL,
-        realm REFERENCES Realm(id) NOT NULL,
-        PRIMARY KEY(identity, realm)
+        id integer NOT NULL REFERENCES identity(id),
+        realm integer NOT NULL REFERENCES realm(id),
+        PRIMARY KEY(id, realm)
 );
