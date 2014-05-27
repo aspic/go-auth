@@ -41,24 +41,23 @@ func pgAuth(username string, password string, realm string) bool {
         WHERE inrealm.id = u.id AND inrealm.realm = realm.id
         AND realm.name = $1 AND u.username = $2`)
     if err != nil {
-        log.Print("Failed to do query: ", err)
+        log.Print("Failed to execute query: ", err)
         return false
     }
     stmt.QueryRow(realm, username).Scan(&hash, &salt)
     if hash != "" && salt != "" {
-        return verifyPassword(password, salt, hash)
+        return validPassword(password, salt, hash)
     }
     log.Print("Got salt:", salt)
 
     return false
 }
 
-func verifyPassword(pw string, salt string, pwHash string) bool {
+func validPassword(pw string, salt string, pwHash string) bool {
     pwBytes := []byte(salt + pw)
     hasher := sha256.New()
     hasher.Write(pwBytes)
     sum := fmt.Sprintf("%x", hasher.Sum(nil))
-    log.Print(sum)
     return sum == pwHash
 }
 
@@ -77,6 +76,8 @@ func New (conf *Config) Auth {
             return nil
         }
         return pgAuth
+    } else {
+        log.Fatal("No backend set, fix configuration")
     }
     return nil
 }
