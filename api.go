@@ -45,7 +45,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 // Handler to test token auth
 func testHandler(w http.ResponseWriter, r *http.Request) {
-    token := client.AuthWithCookie(r, config.Key)
+    token := client.AuthByRequest(r, config.Key)
 
     if token != nil {
         fmt.Fprintf(w, "You are: %s", token.Get("user"))

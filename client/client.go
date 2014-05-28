@@ -6,13 +6,30 @@ import (
     "log"
 )
 
+const (
+    TOKEN_FORM = "token"
+    TOKEN_HEADER = "x-access-token"
+    TOKEN_COOKIE = "token"
+)
+
 type Token struct {
     token *jwt.Token
 }
 
-// Validates token with a request cookie
-func AuthWithCookie(r *http.Request, key string) *Token {
-    cookie, err := r.Cookie("token")
+/**
+ * Looks for query param 'token', header 'x-access-token' and cookie 'token'
+ * in that specific order
+ */
+func AuthByRequest(r *http.Request, key string) *Token {
+    token := AuthWithKey(r.FormValue(TOKEN_FORM), key)
+    if token != nil {
+        return token
+    }
+    token = AuthWithKey(r.Header.Get(TOKEN_HEADER), key)
+    if token != nil {
+        return token
+    }
+    cookie, err := r.Cookie(TOKEN_COOKIE)
     if err == nil && cookie != nil {
         return AuthWithKey(cookie.Value, key)
     }
