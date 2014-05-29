@@ -48,7 +48,7 @@ func pgAuth(username string, password string, realm string) bool {
     if hash != "" && salt != "" {
         return validPassword(password, salt, hash)
     }
-    log.Print("Got salt:", salt)
+    log.Printf("Unable to authenticate user: %s for realm %s", username, realm)
 
     return false
 }

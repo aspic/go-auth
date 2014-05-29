@@ -68,6 +68,7 @@ func main() {
 
     http.HandleFunc("/auth", authHandler)
     http.HandleFunc("/secret", testHandler)
+    http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
     var local = flag.String("local", "", "serve as webserver, example: 0.0.0.0:8000")
     flag.Parse()
