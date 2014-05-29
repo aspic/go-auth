@@ -24,6 +24,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Access-Control-Allow-Origin", "*")
 
     // Do authentication
+    log.Printf("Challenge by '%s' in realm '%s' from IP '&s'", username, realm, r.RemoteAddr)
     if auth(username, password, realm) {
         token := jwt.New(jwt.GetSigningMethod("HS256"))
         token.Claims["user"] = username
@@ -32,13 +33,14 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
         tokenString, err := token.SignedString([]byte(config.Key))
         if err == nil {
-            log.Printf("Authenticated '%s' in realm '%s' from IP '%s'", username, realm, r.RemoteAddr)
+            log.Print("Success")
             fmt.Fprint(w, tokenString)
         } else {
             log.Print("Error creating token string, ", err)
             http.Error(w, http.StatusText(500), 500)
         }
     } else {
+        log.Printf("Invalid username/password/realm combo")
         http.Error(w, http.StatusText(401), 401)
     }
 }
