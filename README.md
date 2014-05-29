@@ -52,7 +52,7 @@ Run the service by:
 
     $ ./go-auth -local=":8080" # Answers on localhost:8080
 
-If you have the stock configuration a token can be retrieved by issuing:
+If you have stock configuration a token can be retrieved by issuing:
 
     $ curl http://localhost:8080/auth?username=username&password=password
 
