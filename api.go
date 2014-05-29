@@ -13,6 +13,7 @@ import (
 )
 
 var auth backend.Auth
+var key string
 var config *backend.Config
 
 // Expects username and password, returns token
@@ -23,15 +24,17 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
     realm := r.FormValue("realm")
     w.Header().Set("Access-Control-Allow-Origin", "*")
 
-    // Do authentication
-    log.Printf("Challenge by '%s' in realm '%s' from IP '&s'", username, realm, r.RemoteAddr)
-    if auth(username, password, realm) {
+    // Do authentication, store key
+    log.Printf("Challenge by '%s' in realm '%s' from IP '%s'", username, realm, r.RemoteAddr)
+    success, key := auth(username, password, realm)
+
+    if success {
         token := jwt.New(jwt.GetSigningMethod("HS256"))
         token.Claims["user"] = username
         token.Claims["iss"] = realm
         token.Claims["exp"] = time.Now().Add(time.Hour * time.Duration(config.Expire)).Unix()
 
-        tokenString, err := token.SignedString([]byte(config.Key))
+        tokenString, err := token.SignedString([]byte(key))
         if err == nil {
             log.Print("Success")
             fmt.Fprint(w, tokenString)

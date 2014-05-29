@@ -14,7 +14,7 @@ import (
 var config *Config
 var db *sql.DB
 
-type Auth func(username string, password string, realm string) bool
+type Auth func(username string, password string, realm string) (bool, string)
 
 type Config struct {
     Key string      // JWT Secret
@@ -27,30 +27,32 @@ type Config struct {
 }
 
 // Reads username and password from the configuration file
-func simpleAuth(username string, password string, realm string) bool {
-    return username == config.Username && password == config.Password
+func simpleAuth(username string, password string, realm string) (bool, string) {
+    return username == config.Username && password == config.Password, config.Key
 }
 
 // Auths with postgresql database as back end
-func pgAuth(username string, password string, realm string) bool {
+func pgAuth(username string, password string, realm string) (bool, string) {
     var hash string
     var salt string
+    var key string
 
     stmt, err := db.Prepare(
-        `SELECT u.pw_hash, u.salt FROM identity AS u, realm, inrealm
+        `SELECT u.pw_hash, u.salt, realm.key FROM identity AS u, realm, inrealm
         WHERE inrealm.id = u.id AND inrealm.realm = realm.id
         AND realm.name = $1 AND u.username = $2`)
     if err != nil {
         log.Print("Failed to execute query: ", err)
-        return false
+        return false, ""
     }
-    stmt.QueryRow(realm, username).Scan(&hash, &salt)
+    stmt.QueryRow(realm, username).Scan(&hash, &salt, &key)
+    log.Print("Got key: ", key)
     if hash != "" && salt != "" {
-        return validPassword(password, salt, hash)
+        return validPassword(password, salt, hash), key
     }
     log.Printf("Unable to authenticate user: %s for realm %s", username, realm)
 
-    return false
+    return false, ""
 }
 
 func validPassword(pw string, salt string, pwHash string) bool {
