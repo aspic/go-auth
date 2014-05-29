@@ -27,11 +27,35 @@ specified as an argument.
 
     $ ./go-auth -local="localhost:8080"
 
+## Configuration
+
+An example configuration is located in **auth.config.example**. In order
+to be able to run go-auth this file must be copied to **auth.config**,
+and modified with your credentials.
+
+### Simple Auth
+
+This scheme is configured as displayed below:
+
+    Auth = simpleAuth // Tells go-auth to use the simpleAuth backend.
+    Username = user // Some username
+    Password = password // Some password
+    Key = key // A key to sign JWTs
+
+Upon authentication go-auth will match username/password from the
+request with the configured values. This scheme is most applicable for
+testing and initial setup of the application.
+
 ## Usage
 
-A token is retrieved by authenticating with the /auth endpoint:
+Run the service by:
 
-    $ curl http://localhost:8080/auth?username=foo&password=bar
+    $ ./go-auth -local=":8080" # Answers on localhost:8080
 
-The client has to store this token, and present it when requesting
-services that are protected by the go-auth scheme.
+If you have the stock configuration a token can be retrieved by issuing:
+
+    $ curl http://localhost:8080/auth?username=username&password=password
+
+The client has the responsebility to store this token. In subsequent
+calls to protected resources the client can present this token to verify
+itself.
