@@ -22,11 +22,6 @@ your $GOPATH
     $ cd go-auth/
     $ go get && go build
 
-The service is started by executing the binary with hostname and port
-specified as an argument.
-
-    $ ./go-auth -local="localhost:8080"
-
 ## Configuration
 
 An example configuration is located in **auth.config.example**. In order
@@ -48,9 +43,9 @@ testing and initial setup of the application.
 
 ## Usage
 
-Run the service by:
+Run the service, and specify host and port:
 
-    $ ./go-auth -local=":8080" # Answers on localhost:8080
+    $ ./go-auth -local="localhost:8080"
 
 If you have stock configuration a token can be retrieved by issuing:
 
