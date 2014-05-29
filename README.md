@@ -27,11 +27,33 @@ specified as an argument.
 
     $ ./go-auth -local="localhost:8080"
 
+## Configuration
+
+An example configuration is located in **auth.config.example**. In order
+to be able to run go-auth this file must be copied to **auth.config**,
+and modified with your credentials.
+
+Currentl two authentication schemes are supported by go-auth;
+simpleAuth and pgAuth.
+
+### Simple Auth
+
+This scheme is configured as displayed below:
+
+    Auth = simpleAuth // Tells go-auth to use the simpleAuth backend.
+    Username = user // Some username
+    Password = password // Some password
+    Key = key // A key to sign JWTs
+
+Upon authentication go-auth will match username/password from the
+request with the configured values. This scheme is most applicable for
+testing and initial setup of the application.
+
 ## Usage
 
 A token is retrieved by authenticating with the /auth endpoint:
 
-    $ curl http://localhost:8080/auth?username=foo&password=bar
+    $ curl http://localhost:8080/auth?username=foo&password=bar&realm=realm
 
 The client has to store this token, and present it when requesting
 services that are protected by the go-auth scheme.

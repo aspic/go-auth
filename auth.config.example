@@ -1,13 +1,19 @@
 # Edit and rename this to auth.config.
 
-# JWT secret that will sign your JWTs. Has to correspond to the client
-# key
-Key = SOMESECRETKEY
+# General
 Expire = 72 # Valid time for token, in hours
 
-# A simple auth scheme
+# Auth schemes
+
+# Simple auth (username and password from config)
 Auth = simpleAuth
+Key = $s0m3$secretk3y # To sign/validate JWTs server/client side
 Username = foo
 Password = bar
 
-# Database details, username/password will be db-user and db-password
+# Postgresql auth
+# Auth = pgAuth
+# Username = dbUser
+# Password = dbPassword
+# Host = dbHost
+# Database = database
