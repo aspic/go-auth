@@ -59,18 +59,19 @@ itself.
 
 A simple example on how to do this with a go-service is attached below. I left out some details for readability.
 
-    package main
-    
+    // Import client
     import (
         "github.com/aspic/go-auth/client"
         .. other imports
     )
     
+    // Setup regular http handler
     func protectedService(w http.ResponseWriter, r *http.Request) {
     
-        // Auths based on header, param or cookie
-        token := client.AuthByRequest(r, config.Key)
+        // Authenticates based on header, param or cookie
+        token := client.AuthByRequest(r, "YOUR APPLICATION KEY")
     
+        // A validated token
         if token != nil {
             fmt.Fprintf(w, "Welcome to this protected resource: %s", token.Get("user"))
         } else {
@@ -79,8 +80,6 @@ A simple example on how to do this with a go-service is attached below. I left o
     }
     
     func main() {
-        .. do stuff
-        
         http.HandleFunc("/protected", protectedService)
         
         .. do stuff
