@@ -57,7 +57,7 @@ itself.
 
 ## Plug into service
 
-A simple example on how to do this with a go-service is attached below. I left out some details for readability.
+An example on how to plug this authtenciation into your go-service is described. I left out some details for readability. This service will validate the provided token based on its private key (the key corresponding with the key that generated the token). 
 
     // Import client
     import (
@@ -65,7 +65,7 @@ A simple example on how to do this with a go-service is attached below. I left o
         .. other imports
     )
     
-    // Setup regular http handler
+    // Setup http handler
     func protectedService(w http.ResponseWriter, r *http.Request) {
     
         // Authenticates based on header, param or cookie
