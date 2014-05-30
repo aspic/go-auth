@@ -57,7 +57,7 @@ itself.
 
 ## Plug into service
 
-An example on how to plug this authtenciation into your go-service is described below. I left out some details for readability. This service will validate the provided token based on its private key (the key corresponding with the key that generated the token). 
+An example on how to plug this authtenciation into your go-service is described below. I left out some details for readability. This service will validate the provided token based on its private key (the key corresponding with the key that originially was used to sign the token). 
 
     // Import client
     import (
