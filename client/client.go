@@ -20,7 +20,7 @@ type Token struct {
 
 type User struct {
     Realm string `json:"iss"`
-    User string `json:"user"`
+    Username string `json:"user"`
 }
 
 /**

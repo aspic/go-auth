@@ -7,6 +7,7 @@ import (
     "github.com/aspic/go-auth/client"
     "github.com/dgrijalva/jwt-go"
     "github.com/itkinside/itkconfig"
+    "html/template"
     "log"
     "net/http"
     "time"
@@ -55,14 +56,18 @@ func idHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
         return
     }
-    key := auther.ValidateByUser(user.User, user.Realm)
+    key := auther.ValidateByUser(user.Username, user.Realm)
     if key == "" {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
         return
     }
     token := client.AuthByRequest(r, key)
     if token != nil {
-        fmt.Printf("You are authenticated: %s", user.User)
+        t, err := template.ParseFiles("templates/id.tpl")
+        if err != nil {
+            log.Print(err)
+        }
+        t.Execute(w, &user)
     } else {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
     }
