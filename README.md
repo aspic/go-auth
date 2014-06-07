@@ -22,13 +22,13 @@ your $GOPATH
     $ cd go-auth/
     $ go get && go build
 
-## Configuration
+### Configuration
 
 An example configuration is located in **auth.config.example**. In order
 to be able to run go-auth this file must be copied to **auth.config**,
 and modified with your credentials.
 
-### Simple Auth
+#### Simple Auth
 
 This scheme is configured as displayed below:
 
@@ -41,7 +41,7 @@ Upon authentication go-auth will match username/password from the
 request with the configured values. This scheme is most applicable for
 testing and initial setup of the application.
 
-## Usage
+### Usage
 
 Run the service, and specify host and port:
 
@@ -54,3 +54,33 @@ If you have stock configuration a token can be retrieved by issuing:
 The client has the responsebility to store this token. In subsequent
 calls to protected resources the client can present this token to verify
 itself.
+
+## Plug into service
+
+An example on how to plug this authtenciation into your go-service is described below. I left out some details for readability. This service will validate the provided token based on its private key (the key corresponding with the key that originially was used to sign the token). 
+
+    // Import client
+    import (
+        "github.com/aspic/go-auth/client"
+        .. other imports
+    )
+    
+    // Setup http handler
+    func protectedService(w http.ResponseWriter, r *http.Request) {
+    
+        // Authenticates based on header, param or cookie
+        token := client.AuthByRequest(r, "YOUR APPLICATION KEY")
+    
+        // A validated token
+        if token != nil {
+            fmt.Fprintf(w, "Welcome to this protected resource: %s", token.Get("user"))
+        } else {
+            http.Error(w, "You are not authenticated", http.StatusForbidden)
+        }
+    }
+    
+    func main() {
+        http.HandleFunc("/protected", protectedService)
+        
+        .. do stuff
+    }
