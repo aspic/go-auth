@@ -14,7 +14,14 @@ import (
 var config *Config
 var db *sql.DB
 
-type Auth func(username string, password string, realm string) (bool, string)
+type Auther interface {
+    Auth(username string, password string, realm string) (bool, string)
+    ValidateByUser(username string, realm string) string
+}
+
+type Simple struct {}
+
+type Postgres struct {}
 
 type Config struct {
     Key string      // JWT Secret
@@ -27,12 +34,12 @@ type Config struct {
 }
 
 // Reads username and password from the configuration file
-func simpleAuth(username string, password string, realm string) (bool, string) {
+func (s *Simple) Auth(username string, password string, realm string) (bool, string) {
     return username == config.Username && password == config.Password, config.Key
 }
 
 // Auths with postgresql database as back end
-func pgAuth(username string, password string, realm string) (bool, string) {
+func (p *Postgres) Auth(username string, password string, realm string) (bool, string) {
     var hash string
     var salt string
     var key string
@@ -55,6 +62,17 @@ func pgAuth(username string, password string, realm string) (bool, string) {
     return false, ""
 }
 
+func (s *Simple) ValidateByUser(username string, realm string) string {
+    if username == config.Username {
+        return config.Key
+    }
+    return ""
+}
+
+func (s *Postgres) ValidateByUser(username string, realm string) string {
+    return ""
+}
+
 func validPassword(pw string, salt string, pwHash string) bool {
     pwBytes := []byte(salt + pw)
     hasher := sha256.New()
@@ -63,12 +81,12 @@ func validPassword(pw string, salt string, pwHash string) bool {
     return sum == pwHash
 }
 
-func New (conf *Config) Auth {
+func New (conf *Config) Auther {
     var err error
     config = conf
 
     if config.Auth == "simpleAuth" {
-        return simpleAuth
+        return &Simple{}
     } else if config.Auth == "pgAuth" {
         // Load database
         props := fmt.Sprintf("postgres://%s:%s@%s/%s?sslmode=require", config.Username, config.Password, config.Host, config.Database)
@@ -77,7 +95,7 @@ func New (conf *Config) Auth {
             log.Fatal(err)
             return nil
         }
-        return pgAuth
+        return &Postgres{}
     } else {
         log.Fatal("No backend set, fix configuration")
     }

@@ -12,7 +12,7 @@ import (
     "time"
 )
 
-var auth backend.Auth
+var auther backend.Auther
 var key string
 var config *backend.Config
 
@@ -26,7 +26,7 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
     // Do authentication, store key
     log.Printf("Challenge by '%s' in realm '%s' from IP '%s'", username, realm, r.RemoteAddr)
-    success, key := auth(username, password, realm)
+    success, key := auther.Auth(username, password, realm)
 
     if success {
         token := jwt.New(jwt.GetSigningMethod("HS256"))
@@ -48,12 +48,21 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-// Handler to test token auth
-func testHandler(w http.ResponseWriter, r *http.Request) {
-    token := client.AuthByRequest(r, config.Key)
-
+// Validate user based on an "arbitrary" token
+func idHandler(w http.ResponseWriter, r *http.Request) {
+    user := client.ParseUser(r)
+    if user == nil {
+        http.Error(w, "You are not authenticated", http.StatusForbidden)
+        return
+    }
+    key := auther.ValidateByUser(user.User, user.Realm)
+    if key == "" {
+        http.Error(w, "You are not authenticated", http.StatusForbidden)
+        return
+    }
+    token := client.AuthByRequest(r, key)
     if token != nil {
-        fmt.Fprintf(w, "You are: %s", token.Get("user"))
+        fmt.Printf("You are authenticated: %s", user.User)
     } else {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
     }
@@ -69,10 +78,10 @@ func main() {
         log.Print("Could not read config file ", configFile, err)
     }
 
-    auth = backend.New(config)
+    auther = backend.New(config)
 
     http.HandleFunc("/auth", authHandler)
-    http.HandleFunc("/secret", testHandler)
+    http.HandleFunc("/id", idHandler)
     http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static/"))))
 
     var local = flag.String("local", "", "serve as webserver, example: 0.0.0.0:8000")

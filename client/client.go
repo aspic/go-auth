@@ -1,9 +1,11 @@
 package client
 
 import (
+    "encoding/json"
     "github.com/dgrijalva/jwt-go"
-    "net/http"
     "log"
+    "net/http"
+    "strings"
 )
 
 const (
@@ -16,25 +18,38 @@ type Token struct {
     token *jwt.Token
 }
 
+type User struct {
+    Realm string `json:"iss"`
+    User string `json:"user"`
+}
+
 /**
  * Looks for query param 'token', header 'x-access-token' and cookie 'token'
- * in that specific order
+ * in that order
  */
 func AuthByRequest(r *http.Request, key string) *Token {
-    token := AuthWithKey(r.FormValue(TOKEN_FORM), key)
-    if token != nil {
-        return token
+    tokenString := getJwtString(r)
+    if tokenString != "" {
+        return AuthWithKey(tokenString, key)
     }
-    token = AuthWithKey(r.Header.Get(TOKEN_HEADER), key)
-    if token != nil {
-        return token
+    return nil
+}
+
+
+func getJwtString(r *http.Request) string {
+    tokenString := r.FormValue(TOKEN_FORM)
+    if tokenString != "" {
+        return tokenString
+    }
+    tokenString = r.Header.Get(TOKEN_HEADER)
+    if tokenString != "" {
+        return tokenString
     }
     cookie, err := r.Cookie(TOKEN_COOKIE)
     if err == nil && cookie != nil {
-        return AuthWithKey(cookie.Value, key)
+        return cookie.Value
     }
-    log.Print("Unable to read cookie, ", err)
-    return nil
+    return ""
 }
 
 // Validates token with the provided key.
@@ -57,4 +72,21 @@ func Auth(tokenString string, keyFunc jwt.Keyfunc) *Token {
 // Gets the value of the claim key
 func (token *Token) Get(key string) string {
     return token.token.Claims[key].(string)
+}
+
+// Parses part of the token to a User struct
+func ParseUser(r *http.Request) *User {
+    tokenString := getJwtString(r)
+    bytes, err := jwt.DecodeSegment(strings.Split(tokenString, ".")[1])
+    if err != nil {
+        log.Print("Unable to decode segment: ", err)
+        return nil
+    }
+    user := &User{}
+    err = json.Unmarshal(bytes, user)
+    if err != nil {
+        log.Print("Unable to decode json: ", err)
+        return nil
+    }
+    return user
 }

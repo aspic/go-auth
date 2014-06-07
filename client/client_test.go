@@ -52,3 +52,15 @@ func TestRequestWithCookieToken_shouldReturnToken(t *testing.T) {
         t.Errorf("Token not set")
     }
 }
+
+func TestParseUser(t *testing.T) {
+    req, err := http.NewRequest("GET", "http://auth-server.com/foo", nil)
+    if err != nil {
+        log.Fatal(err)
+    }
+    req.Header.Set("x-access-token", tokenString)
+    user := ParseUser(req)
+    if user.User != "root" {
+        t.Errorf("Could not parse username=%s", user.User)
+    }
+}
