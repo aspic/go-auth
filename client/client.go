@@ -3,6 +3,7 @@ package client
 import (
     "encoding/json"
     "github.com/dgrijalva/jwt-go"
+    "github.com/aspic/go-auth/common"
     "log"
     "net/http"
     "strings"
@@ -16,11 +17,6 @@ const (
 
 type Token struct {
     token *jwt.Token
-}
-
-type User struct {
-    Realm string `json:"iss"`
-    Username string `json:"user"`
 }
 
 /**
@@ -75,14 +71,14 @@ func (token *Token) Get(key string) string {
 }
 
 // Parses part of the token to a User struct
-func ParseUser(r *http.Request) *User {
+func ParseUser(r *http.Request) *common.User {
     tokenString := getJwtString(r)
     bytes, err := jwt.DecodeSegment(strings.Split(tokenString, ".")[1])
     if err != nil {
         log.Print("Unable to decode segment: ", err)
         return nil
     }
-    user := &User{}
+    user := &common.User{}
     err = json.Unmarshal(bytes, user)
     if err != nil {
         log.Print("Unable to decode json: ", err)

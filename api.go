@@ -3,10 +3,10 @@ package main
 import (
     "flag"
     "fmt"
-    "github.com/aspic/go-auth/backend"
-    "github.com/aspic/go-auth/client"
     "github.com/dgrijalva/jwt-go"
     "github.com/itkinside/itkconfig"
+    "github.com/aspic/go-auth/backend"
+    "github.com/aspic/go-auth/client"
     "html/template"
     "log"
     "net/http"
@@ -14,7 +14,6 @@ import (
 )
 
 var auther backend.Auther
-var key string
 var config *backend.Config
 
 // Expects username and password, returns token
@@ -51,23 +50,26 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 
 // Validate user based on an "arbitrary" token
 func idHandler(w http.ResponseWriter, r *http.Request) {
+    // Parse username and realm from token, could be forged
     user := client.ParseUser(r)
     if user == nil {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
         return
     }
-    key := auther.ValidateByUser(user.Username, user.Realm)
-    if key == "" {
+    // Fetch key based on username and optionally realm
+    authInfo := auther.ValidateByUser(user)
+    if authInfo.Key == "" {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
         return
     }
-    token := client.AuthByRequest(r, key)
+    // Validate token based on key. A token is signed by the client application, hence we know if it is forged or not
+    token := client.AuthByRequest(r, authInfo.Key)
     if token != nil {
         t, err := template.ParseFiles("templates/id.tpl")
         if err != nil {
             log.Print(err)
         }
-        t.Execute(w, &user)
+        t.Execute(w, authInfo)
     } else {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
     }

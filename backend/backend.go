@@ -8,6 +8,7 @@ import (
     "database/sql"
     _ "github.com/lib/pq"
     "crypto/sha256"
+    "github.com/aspic/go-auth/common"
     "fmt"
 )
 
@@ -16,7 +17,7 @@ var db *sql.DB
 
 type Auther interface {
     Auth(username string, password string, realm string) (bool, string)
-    ValidateByUser(username string, realm string) string
+    ValidateByUser(user *common.User) *common.AuthInfo
 }
 
 type Simple struct {}
@@ -62,15 +63,40 @@ func (p *Postgres) Auth(username string, password string, realm string) (bool, s
     return false, ""
 }
 
-func (s *Simple) ValidateByUser(username string, realm string) string {
-    if username == config.Username {
-        return config.Key
+func (s *Simple) ValidateByUser(user *common.User) *common.AuthInfo {
+    if user.Username == config.Username {
+        return &common.AuthInfo{Key: config.Key, User: user}
     }
-    return ""
+    return nil
 }
 
-func (s *Postgres) ValidateByUser(username string, realm string) string {
-    return ""
+func (s *Postgres) ValidateByUser(user *common.User) *common.AuthInfo {
+    stmt, err := db.Prepare(
+        `SELECT r.name FROM identity AS i, realm AS r, inrealm
+         WHERE inrealm.id = i.id AND r.id = inrealm.realm AND i.username = $1`)
+    if err != nil {
+        log.Fatal(err)
+    }
+    rows, err := stmt.Query(user.Username)
+    realms := make([]*common.Realm, 0)
+    var key string
+    for rows.Next() {
+        var realmName string
+        var realmKey string
+        if err := rows.Scan(&realmName); err != nil {
+            log.Fatal(err)
+        }
+        if realmName == user.Realm {
+            key = realmKey
+        }
+        realms = append(realms, &common.Realm{Name: realmName})
+    }
+    // Got valid realm and matching key
+    if len(realms) > 0 && key != "" {
+        return &common.AuthInfo{Key: key, User: user, Realms: realms}
+    }
+
+    return nil
 }
 
 func validPassword(pw string, salt string, pwHash string) bool {
