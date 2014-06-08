@@ -58,7 +58,7 @@ func idHandler(w http.ResponseWriter, r *http.Request) {
     }
     // Fetch key based on username and optionally realm
     authInfo := auther.ValidateByUser(user)
-    if authInfo.Key == "" {
+    if authInfo == nil {
         http.Error(w, "You are not authenticated", http.StatusForbidden)
         return
     }

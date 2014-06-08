@@ -72,7 +72,7 @@ func (s *Simple) ValidateByUser(user *common.User) *common.AuthInfo {
 
 func (s *Postgres) ValidateByUser(user *common.User) *common.AuthInfo {
     stmt, err := db.Prepare(
-        `SELECT r.name FROM identity AS i, realm AS r, inrealm
+        `SELECT r.name, r.key FROM identity AS i, realm AS r, inrealm
          WHERE inrealm.id = i.id AND r.id = inrealm.realm AND i.username = $1`)
     if err != nil {
         log.Fatal(err)
@@ -83,7 +83,7 @@ func (s *Postgres) ValidateByUser(user *common.User) *common.AuthInfo {
     for rows.Next() {
         var realmName string
         var realmKey string
-        if err := rows.Scan(&realmName); err != nil {
+        if err := rows.Scan(&realmName, &realmKey); err != nil {
             log.Fatal(err)
         }
         if realmName == user.Realm {
