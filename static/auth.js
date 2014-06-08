@@ -43,5 +43,7 @@ Auth.prototype.login = function(form) {
 
 /** Stores the received cookie */
 Auth.prototype.setCookie = function(cookie) {
-    document.cookie = 'token=' + cookie + '; path=/';
+    var parts = document.domain.split('.');
+    parts.shift();
+    document.cookie = 'token=' + cookie + '; path=/; domain=' + parts.join('.');
 }
