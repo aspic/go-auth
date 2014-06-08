@@ -73,7 +73,12 @@ func (token *Token) Get(key string) string {
 // Parses part of the token to a User struct
 func ParseUser(r *http.Request) *common.User {
     tokenString := getJwtString(r)
-    bytes, err := jwt.DecodeSegment(strings.Split(tokenString, ".")[1])
+    slices := strings.Split(tokenString, ".")
+    if len(slices) != 3 {
+        log.Print("Can't decode tokenstring: ", tokenString)
+        return nil
+    }
+    bytes, err := jwt.DecodeSegment([1])
     if err != nil {
         log.Print("Unable to decode segment: ", err)
         return nil
